@@ -1,5 +1,5 @@
 /***
- * Assembler for MIPS-32 
+ * Assembler for MIPS-32
  * Created for COS 381 - Computer Architecture
  *
  * @author Ryan Jones
@@ -19,7 +19,7 @@ int translate_register(char *reg);
 int masked_value(int shamt, int shval);
 void shift_value(int *value, int shamt, int shval);
 void get_r_type_values(int *rd, int *rs, int *rt);
-void get_i_type_values(int *rs, int *rt, int *immediate); 
+void get_i_type_values(int *rs, int *rt, int *immediate);
 void r_type_shift(int *instruction, int rs, int rt, int rd);
 void i_type_shift(int *instruction, int rs, int rt, int immediate);
 
@@ -45,6 +45,15 @@ void ori(int rs, int rt, int immediate);
 void slt(int rd, int rs, int rt);
 void slti(int rs, int rt, int immediate);
 void sltiu(int rs, int rt, int immediate);
+void sltu(int rd, int rs, int rt);
+void sll(int rd, int rt, int shamt);
+void srl(int rd, int rt, int shamt);
+void sb(int rs, int rt, int immediate);
+void sc(int rs, int rt, int immediate);
+void sh(int rs, int rt, int immediate);
+void sw(int rs, int rt, int immediate);
+void sub(int rd, int rs, int rt);
+void subu(int rs, int rt, int immediate);
 void nop ();
 
 
@@ -80,11 +89,11 @@ void shift_value(int *value, int shamt, int shval) {
  * Helpful for debugging
  * www.geeksforgeeks.org/binary-representation-of-a-given-number/
  */
-void print_bits(unsigned n) 
-{ 
-    unsigned i; 
-    for (i = 1 << 31; i > 0; i = i / 2) 
-        (n & i)? printf("1"): printf("0"); 
+void print_bits(unsigned n)
+{
+    unsigned i;
+    for (i = 1 << 31; i > 0; i = i / 2)
+        (n & i)? printf("1"): printf("0");
     printf("\n");
 }
 
@@ -221,7 +230,7 @@ void addu(int rd, int rs, int rt) {
  */
 void addiu(int rs, int rt, int immediate) {
 	int instruction = 0;
-	
+
 	shift_value(&instruction, 6, 0x09);
 	i_type_shift(&instruction, rs, rt, immediate);
 
@@ -247,7 +256,7 @@ void and(int rd, int rs, int rt) {
  */
 void andi(int rs, int rt, int immediate) {
 	int instruction = 0;
-	
+
 	shift_value(&instruction, 6, 0x0c);
 	i_type_shift(&instruction, rs, rt, immediate);
 
@@ -286,7 +295,7 @@ void bne(int rs, int rt, int immediate) {
  */
 void j(int address) {
 	int instruction = 0;
-	
+
 	shift_value(&instruction, 6, 0x02);
 	shift_value(&instruction, 26, address);
 
@@ -326,7 +335,7 @@ void jr(int rs) {
  */
 void lbu(int rs, int rt, int immediate) {
 	int instruction = 0;
-	
+
 	shift_value(&instruction, 6, 0x24);
 	i_type_shift(&instruction, rs, rt, immediate);
 
@@ -340,7 +349,7 @@ void lbu(int rs, int rt, int immediate) {
  */
 void lhu(int rs, int rt, int immediate) {
 	int instruction = 0;
-	
+
 	shift_value(&instruction, 6, 0x25);
 	i_type_shift(&instruction, rs, rt, immediate);
 
@@ -369,7 +378,7 @@ void lui(int rs, int rt, int immediate) {
 
 	shift_value(&instruction, 6, 0x0f);
 	i_type_shift(&instruction, rs, rt, immediate);
-	
+
 	print_bits(instruction);
 }
 
@@ -486,6 +495,115 @@ void sltu(int rd, int rs, int rt) {
 }
 
 
+/**
+ * Generates the sll command
+ */
+void sll(int rd, int rt, int shamt) {
+    int instruction = 0;
+
+    shift_value(&instruction, 5, rt);
+    shift_value(&instruction, 5, rd);
+    shift_value(&instruction, 5, shamt);
+    shift_value(&instruction, 6, 0x0);
+
+    print_bits(instruction);
+}
+
+
+/**
+ * Generates the srl command
+ */
+void srl(int rd, int rt, int shamt) {
+    int instruction = 0;
+
+    shift_value(&instruction, 5, rt);
+    shift_value(&instruction, 5, rd);
+    shift_value(&instruction, 5, shamt);
+    shift_value(&instruction, 6, 0x02);
+
+    print_bits(instruction);
+}
+
+
+/**
+ * Generates the sb command
+ */
+void sb(int rs, int rt, int immediate) {
+    int instruction = 0;
+
+    i_type_shift(&instruction, rs, rt, immediate);
+    shift_value(&instruction, 6, 0x28);
+
+    print_bits(instruction);
+}
+
+
+/**
+ * Generates the sc command
+ */
+void sc(int rs, int rt, int immediate) {
+    int instruction = 0;
+
+    i_type_shift(&instruction, rs, rt, immediate);
+    shift_value(&instruction, 6, 0x38);
+
+    print_bits(instruction);
+}
+
+
+/**
+ * Generates the sh command
+ */
+void sh(int rs, int rt, int immediate) {
+    int instruction = 0;
+
+    i_type_shift(&instruction, rs, rt, immediate);
+    shift_value(&instruction, 6, 0x29);
+
+    print_bits(instruction);
+}
+
+
+/**
+ * Generates the sw command
+ */
+void sw(int rs, int rt, int immediate) {
+    int instruction = 0;
+
+    i_type_shift(&instruction, rs, rt, immediate);
+    shift_value(&instruction, 6, 0x2b);
+
+    print_bits(instruction);
+}
+
+
+/**
+ * Generates the sub command
+ */
+void sub(int rd, int rs, int rt) {
+	int instruction = 0;
+
+	r_type_shift(&instruction, rs, rt, rd);
+	shift_value(&instruction, 6, 0x22);
+
+	print_bits(instruction);
+}
+
+
+/**
+ * Generates the subu command
+ */
+void subu(int rd, int rs, int rt) {
+	int instruction = 0;
+
+	r_type_shift(&instruction, rs, rt, rd);
+	shift_value(&instruction, 6, 0x23);
+
+	print_bits(instruction);
+}
+
+
+
 //////////////////////////////////////////////////////////////////////
 //     					   PARSE OF COMMAND                         //
 //////////////////////////////////////////////////////////////////////
@@ -504,52 +622,52 @@ void parse_command(char *str) {
 		get_r_type_values(&rd, &rs, &rt);
 		add(rd, rs, rt);
 	}
-	
+
 	else if(!strcmp(op, "addi")) {
 		get_i_type_values(&rt, &rs, &immediate);
 		addi(rs, rt, immediate);
 	}
-	
+
 	else if(!strcmp(op, "addu")) {
-		get_r_type_values(&rd, &rs, &rt);	
+		get_r_type_values(&rd, &rs, &rt);
 		addu(rd, rs, rt);
 	}
-	
+
 	else if(!strcmp(op, "addiu")) {
 		get_i_type_values(&rt, &rs, &immediate);
 		addiu(rs, rt, immediate);
 	}
-	
+
 	else if(!strcmp(op, "and")) {
 		get_r_type_values(&rd, &rs, &rt);
 		and(rd, rs, rt);
 	}
-	
+
 	else if(!strcmp(op, "andi")) {
 		get_i_type_values(&rt, &rs, &immediate);
 		andi(rs, rt, immediate);
 	}
-	
+
 	else if(!strcmp(op, "beq")) {
 		get_i_type_values(&rt, &rs, &immediate);
 		beq(rs, rt, immediate);
 	}
-	
+
 	else if(!strcmp(op, "bne")) {
 		get_i_type_values(&rt, &rs, &immediate);
 		bne(rs, rt, immediate);
 	}
-	
+
 	else if(!strcmp(op, "j")) {
 		address = atoi(strtok(NULL, "\n\r"));
 		j(address);
 	}
-	
+
 	else if(!strcmp(op, "jal")) {
 		address = atoi(strtok(NULL, "\n\r"));
 		jal(address);
 	}
-	
+
 	else if(!strcmp(op, "jr")) {
 		rs = translate_register(strtok(NULL, "\n\r"));
 		jr(rs);
@@ -581,7 +699,7 @@ void parse_command(char *str) {
 		rs = translate_register(strtok(NULL, ")"));
 		lw(rs, rt, immediate);
 	}
-	
+
 	else if(!strcmp(op, "nop")) {
 		nop();
 	}
@@ -616,15 +734,52 @@ void parse_command(char *str) {
 		sltiu(rs, rt, immediate);
 	}
 
-	else if(!strcmp(op, "slt")) {
+	else if(!strcmp(op, "sltu")) {
 		get_r_type_values(&rd, &rs, &rt);
 		sltu(rd, rs, rt);
 	}
 
 	else if(!strcmp(op, "sll")) {
-		
+        get_r_type_values(&rd, &rs, &shamt);
+        sll(rd, rs, shamt);
 	}
-	
+
+	else if(!strcmp(op, "srl")) {
+        get_r_type_values(&rd, &rs, &shamt);
+        srl(rd, rs, shamt);
+	}
+
+    else if(!strcmp(op, "sb")) {
+		get_i_type_values(&rt, &rs, &immediate);
+		sb(rs, rt, immediate);
+    }
+
+    else if(!strcmp(op, "sc")) {
+		get_i_type_values(&rt, &rs, &immediate);
+		sc(rs, rt, immediate);
+    }
+
+    else if(!strcmp(op, "sh")) {
+		get_i_type_values(&rt, &rs, &immediate);
+		sh(rs, rt, immediate);
+    }
+
+    else if(!strcmp(op, "sw")) {
+		get_i_type_values(&rt, &rs, &immediate);
+		sw(rs, rt, immediate);
+    }
+
+    else if(!strcmp(op, "sub")) {
+        get_r_type_values(&rd, &rs, &shamt);
+        sub(rd, rs, shamt);
+    }
+
+    else if(!strcmp(op, "subu")) {
+        get_r_type_values(&rd, &rs, &shamt);
+        subu(rd, rs, shamt);
+    }
+
+
 	else { // handles unknown commands
 		printf("Unknown command: %s\n", op);
 	}
