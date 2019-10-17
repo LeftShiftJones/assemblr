@@ -473,6 +473,19 @@ void sltiu(int rs, int rt, int immediate) {
 }
 
 
+/**
+ * Generates the sltu command
+ */
+void sltu(int rd, int rs, int rt) {
+	int instruction = 0;
+
+	r_type_shift(&instruction, rs, rt, rd);
+	shift_value(&instruction, 6, 0x2b);
+
+	print_bits(instruction);
+}
+
+
 //////////////////////////////////////////////////////////////////////
 //     					   PARSE OF COMMAND                         //
 //////////////////////////////////////////////////////////////////////
@@ -601,6 +614,11 @@ void parse_command(char *str) {
 	else if(!strcmp(op, "sltiu")) {
 		get_i_type_values(&rt, &rs, &immediate);
 		sltiu(rs, rt, immediate);
+	}
+
+	else if(!strcmp(op, "slt")) {
+		get_r_type_values(&rd, &rs, &rt);
+		sltu(rd, rs, rt);
 	}
 
 	else if(!strcmp(op, "sll")) {
