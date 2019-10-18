@@ -91,9 +91,10 @@ void shift_value(int *value, int shamt, int shval) {
  */
 void print_bits(unsigned n)
 {
-    unsigned i;
-    for (i = 1 << 31; i > 0; i = i / 2)
-        (n & i)? printf("1"): printf("0");
+	printf("0x%08x", n);
+    //unsigned i;
+    //for (i = 1 << 31; i > 0; i = i / 2)
+    //    (n & i)? printf("1"): printf("0");
     printf("\n");
 }
 
@@ -175,7 +176,7 @@ int translate_register(char *reg) {
 	if(!strcmp(reg, "$sp"))   return 29;
 	if(!strcmp(reg, "$fp"))   return 30;
 	if(!strcmp(reg, "$ra"))   return 31;
-	//else return atoi(reg + 1); // returns numeric value (e.g.: $17)
+	else return atoi(reg + 1); // returns numeric value (e.g.: $17)
 }
 
 
@@ -750,22 +751,30 @@ void parse_command(char *str) {
 	}
 
     else if(!strcmp(op, "sb")) {
-		get_i_type_values(&rt, &rs, &immediate);
+		rt = translate_register(strtok(NULL, ", "));
+		immediate = atoi(strtok(NULL, "("));
+		rs = translate_register(strtok(NULL, ")"));
 		sb(rs, rt, immediate);
     }
 
     else if(!strcmp(op, "sc")) {
-		get_i_type_values(&rt, &rs, &immediate);
+		rt = translate_register(strtok(NULL, ", "));
+		immediate = atoi(strtok(NULL, "("));
+		rs = translate_register(strtok(NULL, ")"));
 		sc(rs, rt, immediate);
     }
 
     else if(!strcmp(op, "sh")) {
-		get_i_type_values(&rt, &rs, &immediate);
+		rt = translate_register(strtok(NULL, ", "));
+		immediate = atoi(strtok(NULL, "("));
+		rs = translate_register(strtok(NULL, ")"));
 		sh(rs, rt, immediate);
     }
 
     else if(!strcmp(op, "sw")) {
-		get_i_type_values(&rt, &rs, &immediate);
+		rt = translate_register(strtok(NULL, ", "));
+		immediate = atoi(strtok(NULL, "("));
+		rs = translate_register(strtok(NULL, ")"));
 		sw(rs, rt, immediate);
     }
 
