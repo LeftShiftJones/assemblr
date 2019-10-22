@@ -12,9 +12,12 @@
 
 #define MAX_LENGTH 1024
 
+FILE *fp;
+
 // helper commands
 void print_bits(unsigned bits);
 void parse_command(char *str);
+void write_to_file(int n);
 int translate_register(char *reg);
 int masked_value(int shamt, int shval);
 void shift_value(int *value, int shamt, int shval);
@@ -96,6 +99,12 @@ void print_bits(unsigned n)
     //for (i = 1 << 31; i > 0; i = i / 2)
     //    (n & i)? printf("1"): printf("0");
     printf("\n");
+    write_to_file((int) n);
+}
+
+
+void write_to_file(int n) {
+    if(fp != NULL) fwrite(&n, 4, 1, fp);
 }
 
 
@@ -401,7 +410,7 @@ void lw(int rs, int rt, int immediate) {
  * Prints all bit-zeroes
  */
 void nop() {
-    printf("%032d\n", 0);
+    print_bits(0);
 }
 
 
@@ -799,11 +808,12 @@ void parse_command(char *str) {
  * Main function of the program
  */
 int main(int argc, char **argv, char **envp) {
-
+    
+    fp = fopen("data.bin", "w");
 	char input[MAX_LENGTH];
 	while(fgets(input, MAX_LENGTH, stdin) != NULL) {
 		parse_command(input);
 	}
-
+    
 	return 0;
 }
