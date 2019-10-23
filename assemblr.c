@@ -71,9 +71,7 @@ void nop ();
  */
 int masked_value(int shamt, int shval) {
     int mask = 0x01;
-    for(int i = 0; i < shamt; i++) {
-        mask <<= 2;
-    }
+	mask <<= shamt;
     mask -= 1;
     return (shval & mask);
 }
@@ -94,11 +92,11 @@ void shift_value(int *value, int shamt, int shval) {
  */
 void print_bits(unsigned n)
 {
-	printf("0x%08x", n);
-    //unsigned i;
-    //for (i = 1 << 31; i > 0; i = i / 2)
-    //    (n & i)? printf("1"): printf("0");
-    printf("\n");
+	printf("0x%08x\n", n);
+    // unsigned i;
+    // for (i = 1 << 31; i > 0; i = i / 2)
+    // 	(n & i)? printf("1"): printf("0");
+    // printf("\n");
     write_to_file((int) n);
 }
 
@@ -185,7 +183,7 @@ int translate_register(char *reg) {
 	if(!strcmp(reg, "$sp"))   return 29;
 	if(!strcmp(reg, "$fp"))   return 30;
 	if(!strcmp(reg, "$ra"))   return 31;
-	else return atoi(reg + 1); // returns numeric value (e.g.: $17)
+	else return atoi(reg); // returns numeric value (e.g.: $17)
 }
 
 
@@ -788,13 +786,13 @@ void parse_command(char *str) {
     }
 
     else if(!strcmp(op, "sub")) {
-        get_r_type_values(&rd, &rs, &shamt);
-        sub(rd, rs, shamt);
+        get_r_type_values(&rd, &rs, &rt);
+        sub(rd, rs, rt);
     }
 
     else if(!strcmp(op, "subu")) {
-        get_r_type_values(&rd, &rs, &shamt);
-        subu(rd, rs, shamt);
+        get_r_type_values(&rd, &rs, &rt);
+        subu(rd, rs, rt);
     }
 
 
