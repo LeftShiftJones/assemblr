@@ -1,2 +1,19 @@
 add $t0, $t1, $t2
 addu $t0, $t1, $t2
+addi $t0, $t1, 31
+beq $t0, $t1, 31
+halt
+j 16
+jal 16
+jr $s1
+lw $t0, 16($t1)
+nor $t0, $t1, $t2
+nop
+sll $t0, $t1, 31
+srl $t0, $t1, 31
+slt $t0, $t1, $t2
+sub $t0, $t1, $t2
+sw $t0, 16($t1)
+ori $t0, $t1, 16
+xor $t0, $t1, $t2
+adsf

@@ -14,7 +14,7 @@
 #define MAX_LENGTH 1024
 
 FILE *fp;
-int display_format = 0;
+int display_format = 0, debug = 0;
 
 // helper commands
 void print_bits(unsigned bits);
@@ -59,7 +59,7 @@ void sh(int rs, int rt, int immediate);
 void sw(int rs, int rt, int immediate);
 void sub(int rd, int rs, int rt);
 void subu(int rs, int rt, int immediate);
-void nop ();
+void xor(int rd, int rs, int rt);
 
 
 //////////////////////////////////////////////////////////////////////
@@ -94,13 +94,15 @@ void shift_value(int *value, int shamt, int shval) {
  */
 void print_bits(unsigned n)
 {
-    if(display_format) {
-	    printf("0x%08x\n", n);
-    } else {
-        unsigned i;
-        for (i = 1 << 31; i > 0; i = i / 2)
-      	    (n & i)? printf("1"): printf("0");
-        printf("\n");
+    if(debug) {
+        if(display_format) {
+            printf("0x%08x\n", n);
+        } else {
+            unsigned i;
+            for (i = 1 << 31; i > 0; i = i / 2)
+            (n & i)? printf("1"): printf("0");
+            printf("\n");
+        }
     }
     write_to_file((int) n);
 }
@@ -410,14 +412,6 @@ void lw(int rs, int rt, int immediate) {
 
 
 /**
- * Prints all bit-zeroes
- */
-void nop() {
-    print_bits(0);
-}
-
-
-/**
  * Generates the nor command
  */
 void nor(int rd, int rs, int rt) {
@@ -544,8 +538,8 @@ void srl(int rd, int rt, int shamt) {
 void sb(int rs, int rt, int immediate) {
     int instruction = 0;
 
-    i_type_shift(&instruction, rs, rt, immediate);
     shift_value(&instruction, 6, 0x28);
+    i_type_shift(&instruction, rs, rt, immediate);
 
     print_bits(instruction);
 }
@@ -557,8 +551,8 @@ void sb(int rs, int rt, int immediate) {
 void sc(int rs, int rt, int immediate) {
     int instruction = 0;
 
-    i_type_shift(&instruction, rs, rt, immediate);
     shift_value(&instruction, 6, 0x38);
+    i_type_shift(&instruction, rs, rt, immediate);
 
     print_bits(instruction);
 }
@@ -570,8 +564,8 @@ void sc(int rs, int rt, int immediate) {
 void sh(int rs, int rt, int immediate) {
     int instruction = 0;
 
-    i_type_shift(&instruction, rs, rt, immediate);
     shift_value(&instruction, 6, 0x29);
+    i_type_shift(&instruction, rs, rt, immediate);
 
     print_bits(instruction);
 }
@@ -583,8 +577,8 @@ void sh(int rs, int rt, int immediate) {
 void sw(int rs, int rt, int immediate) {
     int instruction = 0;
 
-    i_type_shift(&instruction, rs, rt, immediate);
     shift_value(&instruction, 6, 0x2b);
+    i_type_shift(&instruction, rs, rt, immediate);
 
     print_bits(instruction);
 }
@@ -615,6 +609,18 @@ void subu(int rd, int rs, int rt) {
 	print_bits(instruction);
 }
 
+
+/**
+ * Generates the xor command
+ */
+void xor(int rd, int rs, int rt) {
+    int instruction = 0;
+
+    r_type_shift(&instruction, rs, rt, rd);
+    shift_value(&instruction, 6, 0x26);
+
+    print_bits(instruction);
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -671,6 +677,10 @@ void parse_command(char *str) {
 		bne(rs, rt, immediate);
 	}
 
+    else if(!strcmp(op, "halt")) {
+        print_bits(0xffffffff);
+    }
+
 	else if(!strcmp(op, "j")) {
 		address = atoi(strtok(NULL, "\n\r"));
 		j(address);
@@ -714,7 +724,7 @@ void parse_command(char *str) {
 	}
 
 	else if(!strcmp(op, "nop")) {
-		nop();
+		print_bits(0x0);
 	}
 
 	else if(!strcmp(op, "nor")) {
@@ -800,10 +810,23 @@ void parse_command(char *str) {
         subu(rd, rs, rt);
     }
 
+    else if(!strcmp(op, "xor")) {
+        get_r_type_values(&rd, &rs, &rt);
+        xor(rs, rt, rd);
+    }
 
 	else { // handles unknown commands
+        // print_bits(0xffffffff);
 		printf("Unknown command: %s\n", op);
 	}
+}
+
+
+void usage() {
+    printf("-d : show debug output\n");
+    printf("-b : show output as bits [default]\n");
+    printf("-h : show output as hex\n");
+    printf("-o : write values to 0x1000\n");
 }
 
 
@@ -811,15 +834,22 @@ void parse_command(char *str) {
  * Main function of the program
  */
 int main(int argc, char **argv, char **envp) {
-    
+
     int c;
-    while((c = getopt(argc, argv, "hb")) != -1) {
+    int start_at_thousand = 0;
+    while((c = getopt(argc, argv, "bdho")) != -1) {
         switch(c) {
+            case 'b':
+                display_format = 0;
+                break;
+            case 'd':
+                debug = 1;
+                break;
             case 'h':
                 display_format = 1;
                 break;
-            case 'b':
-                display_format = 0;
+            case 'o':
+                start_at_thousand = 1;
                 break;
             defualt:
                 break;
@@ -827,10 +857,17 @@ int main(int argc, char **argv, char **envp) {
     }
 
     fp = fopen("data.bin", "w");
+
+    if(start_at_thousand) {
+        int n = 0xffffffff;
+        for(int i = 0; i < 0x1000; i++)
+            fwrite(&n, 1, 1, fp);
+    }
+
 	char input[MAX_LENGTH];
 	while(fgets(input, MAX_LENGTH, stdin) != NULL) {
 		parse_command(input);
 	}
-    
+
 	return 0;
 }
