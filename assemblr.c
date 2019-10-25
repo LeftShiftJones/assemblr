@@ -9,10 +9,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MAX_LENGTH 1024
 
 FILE *fp;
+int display_format = 0;
 
 // helper commands
 void print_bits(unsigned bits);
@@ -92,11 +94,14 @@ void shift_value(int *value, int shamt, int shval) {
  */
 void print_bits(unsigned n)
 {
-	printf("0x%08x\n", n);
-    // unsigned i;
-    // for (i = 1 << 31; i > 0; i = i / 2)
-    // 	(n & i)? printf("1"): printf("0");
-    // printf("\n");
+    if(display_format) {
+	    printf("0x%08x\n", n);
+    } else {
+        unsigned i;
+        for (i = 1 << 31; i > 0; i = i / 2)
+      	    (n & i)? printf("1"): printf("0");
+        printf("\n");
+    }
     write_to_file((int) n);
 }
 
@@ -807,6 +812,20 @@ void parse_command(char *str) {
  */
 int main(int argc, char **argv, char **envp) {
     
+    int c;
+    while((c = getopt(argc, argv, "hb")) != -1) {
+        switch(c) {
+            case 'h':
+                display_format = 1;
+                break;
+            case 'b':
+                display_format = 0;
+                break;
+            defualt:
+                break;
+        }
+    }
+
     fp = fopen("data.bin", "w");
 	char input[MAX_LENGTH];
 	while(fgets(input, MAX_LENGTH, stdin) != NULL) {
