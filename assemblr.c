@@ -14,7 +14,7 @@
 #define MAX_LENGTH 1024
 
 FILE *fp;
-int display_format = 0, debug = 0;
+int display_format = 0, debug = 0, geisler = 0;
 
 // helper commands
 void print_bits(unsigned bits);
@@ -27,6 +27,7 @@ void get_r_type_values(int *rd, int *rs, int *rt);
 void get_i_type_values(int *rs, int *rt, int *immediate);
 void r_type_shift(int *instruction, int rs, int rt, int rd);
 void i_type_shift(int *instruction, int rs, int rt, int immediate);
+void usage();
 
 // conversion of MIPS instructions
 void add(int rd, int rs, int rt);
@@ -129,7 +130,12 @@ void get_r_type_values(int *rd, int *rs, int *rt) {
 void get_i_type_values(int *rt, int *rs, int *immediate) {
 	*rt = translate_register(strtok(NULL, ", "));
 	*rs = translate_register(strtok(NULL, ", "));
-	*immediate = atoi(strtok(NULL, " \n\r"));
+    char *imm = strtok(NULL, " \n\r");
+    if(strlen(imm) > 1 && !strncmp(imm, "0x", 2)) {
+        *immediate = strtol(imm, NULL, 16);
+    } else {
+        *immediate = atoi(imm);
+    }
 }
 
 
@@ -286,7 +292,7 @@ void beq(int rs, int rt, int immediate) {
 	int instruction = 0;
 
 	shift_value(&instruction, 6, 0x04);
-	i_type_shift(&instruction, rs, rt, immediate);
+	i_type_shift(&instruction, rs, rt, (immediate >> 2));
 
 	print_bits(instruction);
 }
@@ -299,7 +305,7 @@ void bne(int rs, int rt, int immediate) {
 	int instruction = 0;
 
 	shift_value(&instruction, 6, 0x05);
-	i_type_shift(&instruction, rs, rt, immediate);
+	i_type_shift(&instruction, rs, rt, (immediate >> 2));
 
 	print_bits(instruction);
 }
@@ -312,7 +318,7 @@ void j(int address) {
 	int instruction = 0;
 
 	shift_value(&instruction, 6, 0x02);
-	shift_value(&instruction, 26, address);
+	shift_value(&instruction, 26, (address >> 2));
 
 	print_bits(instruction);
 }
@@ -325,7 +331,7 @@ void jal(int address) {
 	int instruction = 0;
 
 	shift_value(&instruction, 6, 0x03);
-	shift_value(&instruction, 26, address);
+	shift_value(&instruction, 26, (address >> 2));
 
 	print_bits(instruction);
 }
@@ -509,6 +515,7 @@ void sll(int rd, int rt, int shamt) {
     int instruction = 0;
 
     shift_value(&instruction, 5, rt);
+    if(geisler) shift_value(&instruction, 5, 0x0);
     shift_value(&instruction, 5, rd);
     shift_value(&instruction, 5, shamt);
     shift_value(&instruction, 6, 0x0);
@@ -524,6 +531,7 @@ void srl(int rd, int rt, int shamt) {
     int instruction = 0;
 
     shift_value(&instruction, 5, rt);
+    if(geisler) shift_value(&instruction, 5, 0x0);
     shift_value(&instruction, 5, rd);
     shift_value(&instruction, 5, shamt);
     shift_value(&instruction, 6, 0x02);
@@ -633,7 +641,7 @@ void xor(int rd, int rs, int rt) {
  */
 void parse_command(char *str) {
 	char *op = strtok(str, " \n\r");
-
+    if(!op || !strncmp(op, "#", 1)) return; // newline or comment
 	// variables to work with
 	int address, immediate, rs, rt, rd, shamt;
 
@@ -682,12 +690,22 @@ void parse_command(char *str) {
     }
 
 	else if(!strcmp(op, "j")) {
-		address = atoi(strtok(NULL, "\n\r"));
+        char *addr = strtok(NULL, "\n\r");
+        if(!strncmp(addr, "0x", 2)) {
+            address = strtol(addr, NULL, 16);
+        } else {
+    		address = atoi(addr);
+        }
 		j(address);
 	}
 
 	else if(!strcmp(op, "jal")) {
-		address = atoi(strtok(NULL, "\n\r"));
+        char *addr = strtok(NULL, "\n\r");
+        if(!strncmp(addr, "0x", 2)) {
+            address = strtol(addr, NULL, 16);
+        } else {
+    		address = atoi(addr);
+        }
 		jal(address);
 	}
 
@@ -718,7 +736,12 @@ void parse_command(char *str) {
 
 	else if(!strcmp(op, "lw")) {
 		rt = translate_register(strtok(NULL, ", "));
-		immediate = atoi(strtok(NULL, "("));
+        char *imm = strtok(NULL, "(");
+        if(!strncmp(imm, "0x", 2)) {
+            immediate = strtol(imm, NULL, 16);
+        } else {
+    		immediate = atoi(imm);
+        }
 		rs = translate_register(strtok(NULL, ")"));
 		lw(rs, rt, immediate);
 	}
@@ -795,7 +818,12 @@ void parse_command(char *str) {
 
     else if(!strcmp(op, "sw")) {
 		rt = translate_register(strtok(NULL, ", "));
-		immediate = atoi(strtok(NULL, "("));
+        char *imm = strtok(NULL, "(");
+        if(strlen(imm) > 1 && !strncmp(imm, "0x", 2)) {
+            immediate = strtol(imm, NULL, 16);
+        } else {
+    		immediate = atoi(imm);
+        }
 		rs = translate_register(strtok(NULL, ")"));
 		sw(rs, rt, immediate);
     }
@@ -816,17 +844,18 @@ void parse_command(char *str) {
     }
 
 	else { // handles unknown commands
-        // print_bits(0xffffffff);
 		printf("Unknown command: %s\n", op);
+        usage();
 	}
 }
 
 
 void usage() {
-    printf("-d : show debug output\n");
+    printf("\n-d : show debug output\n");
     printf("-b : show output as bits [default]\n");
     printf("-h : show output as hex\n");
     printf("-o : write values to 0x1000\n");
+    printf("-g : accounts for Geisler's implementation\n\n");
 }
 
 
@@ -837,7 +866,7 @@ int main(int argc, char **argv, char **envp) {
 
     int c;
     int start_at_thousand = 0;
-    while((c = getopt(argc, argv, "bdho")) != -1) {
+    while((c = getopt(argc, argv, "bdhog")) != -1) {
         switch(c) {
             case 'b':
                 display_format = 0;
@@ -851,6 +880,9 @@ int main(int argc, char **argv, char **envp) {
             case 'o':
                 start_at_thousand = 1;
                 break;
+            case 'g':
+                geisler = 1;
+                break;
             defualt:
                 break;
         }
@@ -859,9 +891,8 @@ int main(int argc, char **argv, char **envp) {
     fp = fopen("data.bin", "w");
 
     if(start_at_thousand) {
-        int n = 0xffffffff;
         for(int i = 0; i < 0x1000; i++)
-            fwrite(&n, 1, 1, fp);
+            fwrite(&i, 1, 1, fp);
     }
 
 	char input[MAX_LENGTH];
