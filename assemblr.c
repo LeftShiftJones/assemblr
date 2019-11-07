@@ -737,8 +737,8 @@ void parse_command(char *str) {
 	else if(!strcmp(op, "lw")) {
 		rt = translate_register(strtok(NULL, ", "));
         char *imm = strtok(NULL, "(");
-        if(!strncmp(imm, "0x", 2)) {
-            immediate = strtol(imm, NULL, 16);
+        if(strlen(imm) > 2 && !strncmp(imm, "0x", 2)) {
+            immediate = (int)strtol(imm, NULL, 0);
         } else {
     		immediate = atoi(imm);
         }
@@ -820,7 +820,7 @@ void parse_command(char *str) {
 		rt = translate_register(strtok(NULL, ", "));
         char *imm = strtok(NULL, "(");
         if(strlen(imm) > 1 && !strncmp(imm, "0x", 2)) {
-            immediate = strtol(imm, NULL, 16);
+            immediate = (int)strtol(imm, NULL, 0);
         } else {
     		immediate = atoi(imm);
         }
@@ -840,7 +840,7 @@ void parse_command(char *str) {
 
     else if(!strcmp(op, "xor")) {
         get_r_type_values(&rd, &rs, &rt);
-        xor(rs, rt, rd);
+        xor(rd, rs, rt);
     }
 
 	else { // handles unknown commands
@@ -891,8 +891,11 @@ int main(int argc, char **argv, char **envp) {
     fp = fopen("data.bin", "w");
 
     if(start_at_thousand) {
-        for(int i = 0; i < 0x1000; i++)
-            fwrite(&i, 1, 1, fp);
+        int n = 0;
+        for(int i = 0; i < 0x1000; i+=4) {
+            fwrite(&n, 4, 1, fp);
+            n++;
+        }
     }
 
 	char input[MAX_LENGTH];
